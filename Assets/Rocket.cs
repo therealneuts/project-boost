@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class Rocket : MonoBehaviour {
 
@@ -49,7 +50,7 @@ public class Rocket : MonoBehaviour {
                 break;
 
             case "Goal":
-                //win level
+                SceneManager.LoadScene(1);
                 break;
 
             default:
