@@ -5,44 +5,51 @@ using UnityEngine.SceneManagement;
 
 public class Rocket : MonoBehaviour {
 
+    //Fields
     Rigidbody rigidBody;
-    AudioSource rocketSound;
-    bool dead = false;
+    AudioSource audioSource;
     Vector3 startPosition;
+    float thrusterStrength;
+
+
+    //States control game flow
+    enum States { Alive, Dying, Transcending};
+    States state;
 
     //Defines the time it should take to make a full 360 degree rotation.
     [SerializeField] float fullRotationTime = 2f;
     [SerializeField] float thrusterMultiplier = 100f;
-    float thrusterStrength;
+    [SerializeField] AudioClip mainEngine;
+    [SerializeField] AudioClip explosion;
+    [SerializeField] AudioClip WinChime;
+
 
 	// Use this for initialization
 	void Start () {
         rigidBody = GetComponent<Rigidbody>();
-        rocketSound = GetComponent<AudioSource>();
+        audioSource = GetComponent<AudioSource>();
 
-        rocketSound.Stop();         //Fixes annoying crackling bug
+        audioSource.Stop();         //Fixes annoying crackling bug
 
         thrusterStrength = rigidBody.mass*thrusterMultiplier;
         startPosition = transform.position;
-	}
+        state = States.Alive;
+    }
 	
 	// Update is called once per frame
-	void Update () {
-        if (!dead)
+	void Update ()
+    {
+        if (state == States.Alive)
         {
-            Rotate();
-            Thrust();
+            HandleRotation();
+            HandleThrust();
         }
-        else
-        {
-            Reset();
-        }
-
-
     }
 
     void OnCollisionEnter(Collision collision)
     {
+        if (state != States.Alive) return;
+
         switch (collision.gameObject.tag)
         {
             case "Friendly":
@@ -50,16 +57,24 @@ public class Rocket : MonoBehaviour {
                 break;
 
             case "Goal":
-                SceneManager.LoadScene(1);
+                Win();
+                Invoke("LoadNextScene", 2f);
                 break;
 
             default:
-                Death(collision);
+                Die(collision);
+                Invoke("Reset", 2f);
                 break;
         }   
     }
 
-    private void Rotate()
+    private void Win()
+    {
+        audioSource.PlayOneShot(WinChime);
+        state = States.Transcending;
+    }
+
+    private void HandleRotation()
     {
         //Defines rotation behavior
 
@@ -79,14 +94,14 @@ public class Rocket : MonoBehaviour {
 
     }
 
-    private void Thrust()
+    private void HandleThrust()
     {
         //Defines thrust behavior
 
         //Start rocket sound on key down
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            rocketSound.Play();
+            audioSource.PlayOneShot(mainEngine);
         }
 
         if (Input.GetKey(KeyCode.Space))
@@ -103,16 +118,17 @@ public class Rocket : MonoBehaviour {
         //end rocket sound on key up
         if (Input.GetKeyUp(KeyCode.Space))
         {
-            rocketSound.Stop();
+            audioSource.Stop();
         }
 
 
     }
 
-    void Death(Collision collision)
+    void Die(Collision collision)
     {
-        dead = true;
-        rocketSound.Stop();             //Prevents sound continuing to play when dying while holding space.
+        state = States.Dying;
+        audioSource.Stop();             //Prevents sound continuing to play when dying while holding space.
+        audioSource.PlayOneShot(explosion);
 
         Collider[] colliders = GetComponentsInChildren<Collider>();     //Disables collision
 
@@ -124,22 +140,23 @@ public class Rocket : MonoBehaviour {
 
     private void Reset()
     {
-        if (Input.GetKeyDown(KeyCode.R))
+        state = States.Alive;
+
+        Collider[] colliders = GetComponentsInChildren<Collider>();
+
+        foreach (Collider collider in colliders)
         {
-            dead = false;
-
-            Collider[] colliders = GetComponentsInChildren<Collider>();
-
-            foreach (Collider collider in colliders)
-            {
-                collider.enabled = true;
-            }
-
-            rigidBody.freezeRotation = true;
-            rigidBody.velocity = Vector3.zero;
-            transform.SetPositionAndRotation(startPosition, new Quaternion(0, 0, 0, 0));
-            rigidBody.freezeRotation = false;
+            collider.enabled = true;
         }
+
+        rigidBody.freezeRotation = true;
+        rigidBody.velocity = Vector3.zero;
+        transform.SetPositionAndRotation(startPosition, new Quaternion(0, 0, 0, 0));
+        rigidBody.freezeRotation = false;
     }
 
+    void LoadNextScene()
+    {
+        SceneManager.LoadScene(1);      //todo allow for more levels
+    }
 }
