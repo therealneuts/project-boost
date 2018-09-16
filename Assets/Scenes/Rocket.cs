@@ -16,16 +16,22 @@ public class Rocket : MonoBehaviour {
     enum States { Alive, Dying, Transcending};
     States state;
 
-    //Defines the time it should take to make a full 360 degree rotation.
-    [SerializeField] float fullRotationTime = 2f;
+    //SeriallizeFields
+    [SerializeField] float fullRotationTime = 1.5f;                                       //Defines the time it should take to make a full 360 degree rotation.
     [SerializeField] float thrusterMultiplier = 100f;
+    [SerializeField] float levelLoadDelay = 2f;
+
     [SerializeField] AudioClip mainEngine;
     [SerializeField] AudioClip explosion;
-    [SerializeField] AudioClip WinChime;
+    [SerializeField] AudioClip winChime;
+
+    [SerializeField] ParticleSystem rocketJetParticle;
+    [SerializeField] ParticleSystem explosionParticle;
+    [SerializeField] ParticleSystem successParticle;
 
 
-	// Use this for initialization
-	void Start () {
+    // Use this for initialization
+    void Start () {
         rigidBody = GetComponent<Rigidbody>();
         audioSource = GetComponent<AudioSource>();
 
@@ -58,19 +64,20 @@ public class Rocket : MonoBehaviour {
 
             case "Goal":
                 Win();
-                Invoke("LoadNextScene", 2f);
+                Invoke("LoadNextScene", levelLoadDelay);
                 break;
 
             default:
                 Die(collision);
-                Invoke("Reset", 2f);
+                Invoke("Reset", levelLoadDelay);
                 break;
         }   
     }
 
     private void Win()
     {
-        audioSource.PlayOneShot(WinChime);
+        audioSource.PlayOneShot(winChime);
+        successParticle.Play();
         state = States.Transcending;
     }
 
@@ -102,6 +109,7 @@ public class Rocket : MonoBehaviour {
         if (Input.GetKeyDown(KeyCode.Space))
         {
             audioSource.PlayOneShot(mainEngine);
+            rocketJetParticle.Play();
         }
 
         if (Input.GetKey(KeyCode.Space))
@@ -110,7 +118,7 @@ public class Rocket : MonoBehaviour {
             thrusterStrength = rigidBody.mass * thrusterMultiplier;
 
 
-            rigidBody.AddRelativeForce(Vector3.up * thrusterStrength);
+            rigidBody.AddRelativeForce(Vector3.up * thrusterStrength * 60f * (Time.deltaTime));
 
             rigidBody.freezeRotation = false;           //Resumes physics engine control of rotation
         }
@@ -119,6 +127,7 @@ public class Rocket : MonoBehaviour {
         if (Input.GetKeyUp(KeyCode.Space))
         {
             audioSource.Stop();
+            rocketJetParticle.Stop();
         }
 
 
@@ -129,6 +138,7 @@ public class Rocket : MonoBehaviour {
         state = States.Dying;
         audioSource.Stop();             //Prevents sound continuing to play when dying while holding space.
         audioSource.PlayOneShot(explosion);
+        explosionParticle.Play();
 
         Collider[] colliders = GetComponentsInChildren<Collider>();     //Disables collision
 
