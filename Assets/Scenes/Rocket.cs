@@ -35,8 +35,6 @@ public class Rocket : MonoBehaviour {
         rigidBody = GetComponent<Rigidbody>();
         audioSource = GetComponent<AudioSource>();
 
-        audioSource.Stop();         //Fixes annoying crackling bug
-
         thrusterStrength = rigidBody.mass*thrusterMultiplier;
         startPosition = transform.position;
         state = States.Alive;
