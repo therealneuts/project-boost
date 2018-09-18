@@ -150,17 +150,19 @@ public class Rocket : MonoBehaviour {
     {
         state = States.Alive;
 
-        Collider[] colliders = GetComponentsInChildren<Collider>();
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
 
-        foreach (Collider collider in colliders)
-        {
-            collider.enabled = true;
-        }
+        //Collider[] colliders = GetComponentsInChildren<Collider>();
 
-        rigidBody.freezeRotation = true;
-        rigidBody.velocity = Vector3.zero;
-        transform.SetPositionAndRotation(startPosition, new Quaternion(0, 0, 0, 0));
-        rigidBody.freezeRotation = false;
+        //foreach (Collider collider in colliders)
+        //{
+        //    collider.enabled = true;
+        //}
+
+        //rigidBody.freezeRotation = true;
+        //rigidBody.velocity = Vector3.zero;
+        //transform.SetPositionAndRotation(startPosition, new Quaternion(0, 0, 0, 0));
+        //rigidBody.freezeRotation = false;
     }
 
     void LoadNextScene()
