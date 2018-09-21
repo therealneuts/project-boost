@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -10,13 +11,15 @@ public class Rocket : MonoBehaviour {
     AudioSource audioSource;
     Vector3 startPosition;
     float thrusterStrength;
+    Scene currentScene;
 
 
     //States control game flow
-    enum States { Alive, Dying, Transcending};
+    enum States { Alive, Dying, Transcending, Cheating};
     States state;
 
     //SeriallizeFields
+
     [SerializeField] float fullRotationTime = 1.5f;                                       //Defines the time it should take to make a full 360 degree rotation.
     [SerializeField] float thrusterMultiplier = 100f;
     [SerializeField] float levelLoadDelay = 2f;
@@ -32,6 +35,7 @@ public class Rocket : MonoBehaviour {
 
     // Use this for initialization
     void Start () {
+        currentScene = SceneManager.GetActiveScene();
         rigidBody = GetComponent<Rigidbody>();
         audioSource = GetComponent<AudioSource>();
 
@@ -43,16 +47,33 @@ public class Rocket : MonoBehaviour {
 	// Update is called once per frame
 	void Update ()
     {
-        if (state == States.Alive)
+        if (state == States.Alive || state == States.Cheating)
         {
             HandleRotation();
             HandleThrust();
+        }
+
+        
+        if (Debug.isDebugBuild) HandleDebugInput();
+    }
+
+    private void HandleDebugInput()
+    {
+        if (Input.GetKeyDown(KeyCode.C))
+        {
+            if (state != States.Cheating) state = States.Cheating;
+            else state = States.Alive;
+        }
+
+        if (Input.GetKeyDown(KeyCode.L))
+        {
+            LoadNextScene();
         }
     }
 
     void OnCollisionEnter(Collision collision)
     {
-        if (state != States.Alive) return;
+        if (state != States.Alive && state != States.Cheating) return;
 
         switch (collision.gameObject.tag)
         {
@@ -66,8 +87,11 @@ public class Rocket : MonoBehaviour {
                 break;
 
             default:
-                Die(collision);
-                Invoke("Reset", levelLoadDelay);
+                if (state != States.Cheating)
+                {
+                    Die(collision);
+                    Invoke("Reset", levelLoadDelay);
+                }
                 break;
         }   
     }
@@ -167,6 +191,13 @@ public class Rocket : MonoBehaviour {
 
     void LoadNextScene()
     {
-        SceneManager.LoadScene(1);      //todo allow for more levels
+        if (currentScene.buildIndex + 1 < SceneManager.sceneCountInBuildSettings)
+            SceneManager.LoadScene(currentScene.buildIndex + 1);
+        else LoadFirstScene();
+    }
+
+    private void LoadFirstScene()
+    {
+        SceneManager.LoadScene(0);
     }
 }

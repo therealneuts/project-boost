@@ -846,6 +846,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e3e45a72a55b34c46a9b4a2cc949efbc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  debugMode: 1
   fullRotationTime: 2
   thrusterMultiplier: 50
   levelLoadDelay: 2
