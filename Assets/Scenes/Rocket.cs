@@ -18,7 +18,7 @@ public class Rocket : MonoBehaviour {
     enum States { Alive, Dying, Transcending, Cheating};
     States state;
 
-    //SeriallizeFields
+    //SerializeFields
 
     [SerializeField] float fullRotationTime = 1.5f;                                       //Defines the time it should take to make a full 360 degree rotation.
     [SerializeField] float thrusterMultiplier = 100f;
@@ -191,8 +191,9 @@ public class Rocket : MonoBehaviour {
 
     void LoadNextScene()
     {
-        if (currentScene.buildIndex + 1 < SceneManager.sceneCountInBuildSettings)
-            SceneManager.LoadScene(currentScene.buildIndex + 1);
+        int nextSceneIndex = (currentScene.buildIndex % SceneManager.sceneCountInBuildSettings) + 1;
+        if (nextSceneIndex < SceneManager.sceneCountInBuildSettings)
+            SceneManager.LoadScene(nextSceneIndex);
         else LoadFirstScene();
     }
 
